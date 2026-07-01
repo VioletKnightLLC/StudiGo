@@ -1,0 +1,151 @@
+:root {
+  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+
+  color: #0f0f0f;
+  background-color: #f6f6f6;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+.container {
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 100vh;
+}
+
+h1 {
+  text-align: center;
+  color: #213547;
+}
+
+.status {
+  font-size: 1.1em;
+  margin: 10px 0;
+}
+
+.status span {
+  font-weight: bold;
+  color: #1976d2;
+}
+
+.fps {
+  font-size: 1.2em;
+  margin: 10px 0;
+}
+
+.fps span {
+  font-weight: bold;
+  color: #388e3c;
+}
+
+.error {
+  color: #d32f2f;
+  background-color: #ffebee;
+  padding: 10px;
+  border-radius: 4px;
+  margin: 10px 0;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  color: #ffffff;
+  background-color: #1976d2;
+  transition: all 0.25s;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  background-color: #1565c0;
+  border-color: #1565c0;
+}
+
+button:active:not(:disabled) {
+  background-color: #0d47a1;
+}
+
+button:disabled {
+  background-color: #bdbdbd;
+  cursor: not-allowed;
+}
+
+.canvas-container {
+  margin: 20px 0;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #000;
+  max-width: 100%;
+}
+
+canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.info {
+  color: #666;
+  font-size: 0.9em;
+  margin-top: 10px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #f6f6f6;
+    background-color: #1a1a1a;
+  }
+
+  h1 {
+    color: #e0e0e0;
+  }
+
+  .status span {
+    color: #64b5f6;
+  }
+
+  .fps span {
+    color: #81c784;
+  }
+
+  .error {
+    background-color: #b71c1c;
+    color: #ffcdd2;
+  }
+
+  .canvas-container {
+    border-color: #444;
+  }
+
+  .info {
+    color: #aaa;
+  }
+}
