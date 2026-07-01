@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "GoPro Webcam Studio - Turn a GoPro Hero 8 Black into a system webcam"
 authors = ["lemik"]
 edition = "2021"
+rust-version = "1.75"
 
 [lib]
 name = "gopro_webcam_studio_lib"
@@ -17,3 +18,14 @@ tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+
+# WiFi/RTSP streaming dependencies
+tokio = { version = "1", features = ["rt-multi-thread", "net", "time", "sync", "test-util", "rt"] }
+anyhow = "1"
+log = "0.4"
+futures = "0.3"
+uuid = { version = "1", features = ["v4"] }
+
+[dev-dependencies]
+tokio-test = "0.4"
+mockall = "0.12"
