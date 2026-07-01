@@ -61,6 +61,7 @@ public:
     BYTE* GetFrameBuffer() { return m_pFrameBuffer; }
     int GetFrameWidth() { return m_FrameWidth; }
     int GetFrameHeight() { return m_FrameHeight; }
+    BYTE* GenerateColorBars(int width, int height, int stride);
 
 private:
     LONG m_cRef = 1;
@@ -74,6 +75,10 @@ private:
     BYTE* m_pFrameBuffer = nullptr;
     int m_FrameWidth = 1920;
     int m_FrameHeight = 1080;
+    int m_FrameStride = 1920 * 4;
+    REFERENCE_TIME m_rtFrameDuration = 333333;
+    REFERENCE_TIME m_rtStartTime = 0;
+    FILTER_INFO m_FilterInfo = {};
     
     void GenerateColorBars();
 };
@@ -130,3 +135,22 @@ HRESULT UnregisterFilter();
 
 // Global module handle
 extern HMODULE g_hModule;
+
+// Class Factory
+class CGoProCamFilterFactory : public IClassFactory
+{
+public:
+    CGoProCamFilterFactory() : m_cRef(1) {}
+
+    // IUnknown
+    IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv);
+    IFACEMETHODIMP_(ULONG) AddRef();
+    IFACEMETHODIMP_(ULONG) Release();
+
+    // IClassFactory
+    IFACEMETHODIMP CreateInstance(IUnknown *pUnkOuter, REFIID riid, void **ppv);
+    IFACEMETHODIMP LockServer(BOOL fLock);
+
+private:
+    LONG m_cRef;
+};

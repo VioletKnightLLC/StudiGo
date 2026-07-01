@@ -14,6 +14,25 @@ use output::virtual_cam::{VirtualCamManager, VIRTUAL_CAM_NAME};
 use crate::source_bus::SourceBus;
 use sources::screen::{ScreenCaptureSource, ScreenFrameInput};
 
+/// Connection health status for sources
+#[derive(Debug, Clone, serde::Serialize)]
+pub enum SourceHealth {
+    /// Source is connected and healthy
+    Healthy,
+    /// Source is connected but showing issues (frame drops, latency)
+    Degraded,
+    /// Source is disconnected
+    Disconnected,
+    /// Source is not initialized
+    Uninitialized,
+}
+
+impl Default for SourceHealth {
+    fn default() -> Self {
+        SourceHealth::Uninitialized
+    }
+}
+
 /// Global screen capture source instance
 static SCREEN_SOURCE: once_cell::sync::Lazy<Arc<Mutex<Option<ScreenCaptureSource>>>> =
     once_cell::sync::Lazy::new(|| Arc::new(Mutex::new(None)));
@@ -93,6 +112,70 @@ fn next_screen_frame() -> Result<Vec<u8>, String> {
         source.next_frame().map_err(|e| e.to_string())
     } else {
         Err("Screen source not initialized".to_string())
+    }
+}
+
+/// Get health status of the screen source
+#[tauri::command]
+fn get_screen_source_health() -> SourceHealth {
+    let guard = SCREEN_SOURCE.lock().ok();
+
+    match guard {
+        Some(inner) => match &*inner {
+            Some(source) if source.is_connected() => SourceHealth::Healthy,
+            Some(_) => SourceHealth::Disconnected,
+            None => SourceHealth::Uninitialized,
+        },
+        None => SourceHealth::Uninitialized,
+    }
+}
+
+/// Attempt to reconnect to the screen source
+#[tauri::command]
+fn reconnect_screen_source() -> Result<String, String> {
+    let mut guard = SCREEN_SOURCE.lock().map_err(|e| e.to_string())?;
+
+    if let Some(ref mut source) = *guard {
+        // First disconnect if connected
+        if source.is_connected() {
+            let _ = source.disconnect();
+        }
+        // Reconnect
+        source.connect().map_err(|e| format!("Reconnect failed: {}", e))?;
+        Ok("Screen source reconnected".to_string())
+    } else {
+        Err("Screen source not initialized - please initialize first".to_string())
+    }
+}
+
+/// Check if screen source is currently connected
+#[tauri::command]
+fn is_screen_source_connected() -> bool {
+    SCREEN_SOURCE
+        .lock()
+        .ok()
+        .map(|guard| guard.as_ref().map(|s| s.is_connected()).unwrap_or(false))
+        .unwrap_or(false)
+}
+
+/// Get last error message from screen source
+#[tauri::command]
+fn get_screen_source_error() -> Option<String> {
+    // In a more complete implementation, we'd track last errors
+    // For now, check connection state
+    let guard = SCREEN_SOURCE.lock().ok();
+    match guard {
+        Some(inner) => {
+            if let Some(source) = &*inner {
+                if !source.is_connected() {
+                    return Some("Source disconnected".to_string());
+                }
+                None
+            } else {
+                Some("Source not initialized".to_string())
+            }
+        }
+        None => Some("Failed to lock source".to_string()),
     }
 }
 
@@ -189,6 +272,10 @@ pub fn run() {
             connect_screen_source,
             disconnect_screen_source,
             next_screen_frame,
+            get_screen_source_health,
+            reconnect_screen_source,
+            is_screen_source_connected,
+            get_screen_source_error,
             register_virtual_cam,
             unregister_virtual_cam,
             is_virtual_cam_registered,

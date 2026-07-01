@@ -3,6 +3,7 @@
 
 #include "GoProCamFilter.h"
 #include <strsafe.h>
+#include <new>
 
 #ifdef _DEBUG
 #define DEBUG_LOG(x, ...) fprintf(stderr, "[GoProCamFilter] " x "\n", __VA_ARGS__)
@@ -38,7 +39,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
         return CLASS_E_CLASSNOTAVAILABLE;
     }
     
-    CGoProCamFilterFactory* pFactory = new (std::nothrow) CGoProCamFilterFactory();
+    CGoProCamFilterFactory* pFactory = new CGoProCamFilterFactory();
     if (!pFactory) return E_OUTOFMEMORY;
     
     HRESULT hr = pFactory->QueryInterface(riid, ppv);
@@ -100,7 +101,7 @@ IFACEMETHODIMP CGoProCamFilterFactory::CreateInstance(IUnknown *pUnkOuter, REFII
     
     *ppv = nullptr;
     
-    CGoProCamFilter* pFilter = new (std::nothrow) CGoProCamFilter();
+    CGoProCamFilter* pFilter = new CGoProCamFilter();
     if (!pFilter) return E_OUTOFMEMORY;
     
     HRESULT hr = pFilter->QueryInterface(riid, ppv);
@@ -125,10 +126,6 @@ CGoProCamFilter::CGoProCamFilter()
 {
     // Initialize name
     StringCchCopyW(m_Name, MAX_FILTER_NAME, L"GoPro Webcam Studio");
-    
-    // Initialize filter info
-    m_FilterInfo.achFilterName[0] = L'\0';
-    m_FilterInfo.pGraph = nullptr;
     
     DEBUG_LOG("Filter created");
 }
@@ -289,7 +286,7 @@ IFACEMETHODIMP CGoProCamFilter::EnumPins(IEnumPins **ppEnum)
         int m_position;
     };
     
-    *ppEnum = new (std::nothrow) CEnumPins(this);
+    *ppEnum = new CEnumPins(this);
     return *ppEnum ? S_OK : E_OUTOFMEMORY;
 }
 
@@ -312,7 +309,7 @@ IFACEMETHODIMP CGoProCamFilter::QueryFilterInfo(FILTER_INFO *pInfo)
     if (!pInfo) return E_POINTER;
     
     // Copy filter name
-    StringCchCopyW(pInfo->achFilterName, MAX_FILTER_NAME, m_Name);
+    StringCchCopyW(pInfo->wszName, MAX_FILTER_NAME, m_Name);
     pInfo->pGraph = m_pGraph;
     if (pInfo->pGraph) {
         pInfo->pGraph->AddRef();
@@ -338,7 +335,7 @@ IFACEMETHODIMP CGoProCamFilter::QueryVendorInfo(LPWSTR *pVendorInfo)
 HRESULT CGoProCamFilter::Initialize()
 {
     // Create the output pin
-    m_pOutputPin = new (std::nothrow) CGoProCamOutputPin(this);
+    m_pOutputPin = new CGoProCamOutputPin(this);
     if (!m_pOutputPin) {
         return E_OUTOFMEMORY;
     }
