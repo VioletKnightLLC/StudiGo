@@ -5,4 +5,5 @@
 pub mod bluetooth;
 pub mod fake;
 pub mod screen;
+pub mod uvc;
 pub mod wifi;

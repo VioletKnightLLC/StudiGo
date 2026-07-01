@@ -1,6 +1,8 @@
 // GoPro Webcam Studio - Tauri application entry point
 
+pub mod compositor;
 pub mod frame;
+pub mod scene;
 pub mod source_bus;
 pub mod sources;
 
