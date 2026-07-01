@@ -1,26 +1,12 @@
 //! GoPro Bluetooth Source
 //!
 //! Provides Bluetooth audio input and remote control via Open GoPro BLE API.
-//! Uses Windows Bluetooth APIs via the `bleak` crate equivalents in Rust.
+//! Uses Windows Bluetooth APIs via the `btleplug` crate.
 
 use anyhow::Result;
 use log::{info, warn};
 
-/// SourceBus trait - stub implementation for Bluetooth source
-/// This trait defines the interface for all video/audio sources in the application
-pub trait SourceBus {
-    /// Connect to the source and begin streaming
-    fn connect(&mut self) -> Result<()>;
-
-    /// Disconnect from the source
-    fn disconnect(&mut self) -> Result<()>;
-
-    /// Check if currently connected
-    fn is_connected(&self) -> bool;
-
-    /// Get the next frame as raw bytes
-    fn next_frame(&mut self) -> Result<Vec<u8>>;
-}
+use crate::source_bus::{FrameMetadata, SourceBus};
 
 /// Bluetooth device configuration
 #[derive(Debug, Clone)]
@@ -66,8 +52,8 @@ impl BluetoothSource {
     /// Scan for available Bluetooth devices
     pub fn scan_devices(&self) -> Result<Vec<String>> {
         info!("Scanning for Bluetooth devices...");
-        
-        // TODO: Implement actual BLE scanning using `bleak` crate
+
+        // TODO: Implement actual BLE scanning using `btleplug` crate
         // For now, return an empty list as a stub
         warn!("BLE scanning not yet implemented - returning empty list");
         Ok(vec![])
@@ -76,16 +62,16 @@ impl BluetoothSource {
     /// Connect to a specific device by address
     pub fn connect_to_device(&mut self, address: String) -> Result<()> {
         info!("Connecting to Bluetooth device: {}", address);
-        
+
         // TODO: Implement actual BLE connection using Open GoPro BLE API
         // Open GoPro BLE UUIDs:
         // - Control: 0xFEEC (service), 0xFEED (control characteristic)
         // - Status: 0xFEEE (status characteristic)
         // - Command: 0xFEEE (command characteristic)
-        
+
         self.config.device_address = Some(address);
         self.connected = true;
-        
+
         info!("Bluetooth device connected (stub)");
         Ok(())
     }
@@ -95,7 +81,7 @@ impl BluetoothSource {
         if !self.connected {
             anyhow::bail!("Not connected to any device");
         }
-        
+
         // TODO: Implement actual BLE command sending
         info!("Sending BLE command: {:?}", command);
         Ok(())
@@ -106,7 +92,7 @@ impl BluetoothSource {
         if !self.connected {
             anyhow::bail!("Not connected to any device");
         }
-        
+
         // TODO: Read battery characteristic
         // Battery level is read from characteristic 0xFEEE
         warn!("Battery status not yet implemented");
@@ -157,6 +143,11 @@ impl SourceBus for BluetoothSource {
         // It's used for remote control and status
         warn!("next_frame() called on Bluetooth source - not applicable");
         Ok(vec![])
+    }
+
+    fn frame_metadata(&self) -> Option<FrameMetadata> {
+        // Bluetooth doesn't provide frame metadata
+        None
     }
 }
 

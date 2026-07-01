@@ -8,21 +8,7 @@ use log::{info, warn};
 use std::net::TcpStream;
 use std::time::Duration;
 
-/// SourceBus trait - stub implementation for WiFi streaming source
-/// This trait defines the interface for all video sources in the application
-pub trait SourceBus {
-    /// Connect to the source and begin streaming
-    fn connect(&mut self) -> Result<()>;
-
-    /// Disconnect from the source
-    fn disconnect(&mut self) -> Result<()>;
-
-    /// Check if currently connected
-    fn is_connected(&self) -> bool;
-
-    /// Get the next frame as raw bytes
-    fn next_frame(&mut self) -> Result<Vec<u8>>;
-}
+use crate::source_bus::{FrameMetadata, SourceBus};
 
 /// WiFi connection configuration
 #[derive(Debug, Clone)]
@@ -71,15 +57,16 @@ impl WifiSource {
     /// Verify connection by attempting TCP connection to RTSP port
     fn verify_connection(&self) -> bool {
         let addr = format!("{}:{}", self.config.camera_ip, self.config.rtsp_port);
-        
+
         match TcpStream::connect_timeout(
-            &addr.parse().unwrap_or_else(|_| {
-                panic!("Invalid address: {}", addr)
-            }),
+            &addr.parse().unwrap_or_else(|_| panic!("Invalid address: {}", addr)),
             Duration::from_secs(5),
         ) {
             Ok(_stream) => {
-                info!("TCP connection to {} successful - GoPro RTSP server reachable", addr);
+                info!(
+                    "TCP connection to {} successful - GoPro RTSP server reachable",
+                    addr
+                );
                 true
             }
             Err(e) => {
@@ -100,9 +87,7 @@ impl SourceBus for WifiSource {
     fn connect(&mut self) -> Result<()> {
         let url = format!(
             "rtsp://{}:{}{}",
-            self.config.camera_ip,
-            self.config.rtsp_port,
-            self.config.stream_path
+            self.config.camera_ip, self.config.rtsp_port, self.config.stream_path
         );
 
         info!("Attempting to connect to GoPro WiFi stream at {}", url);
@@ -119,8 +104,11 @@ impl SourceBus for WifiSource {
             Ok(())
         } else {
             self.connected = false;
-            anyhow::bail!("Failed to connect to GoPro RTSP server at {}:{}", 
-                self.config.camera_ip, self.config.rtsp_port)
+            anyhow::bail!(
+                "Failed to connect to GoPro RTSP server at {}:{}",
+                self.config.camera_ip,
+                self.config.rtsp_port
+            )
         }
     }
 
@@ -143,6 +131,14 @@ impl SourceBus for WifiSource {
         // For now, return empty frame data - this stub verifies connection only
         warn!("next_frame() called but RTSP frame parsing not yet implemented");
         Ok(vec![])
+    }
+
+    fn frame_metadata(&self) -> Option<FrameMetadata> {
+        if self.connected {
+            Some(FrameMetadata::new(1920, 1080, 30.0))
+        } else {
+            None
+        }
     }
 }
 

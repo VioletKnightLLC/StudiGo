@@ -1,5 +1,8 @@
 // GoPro Webcam Studio - Tauri application entry point
-// This is a stub for Phase 1 - full implementation follows in later tasks
+
+pub mod frame;
+pub mod source_bus;
+pub mod sources;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
