@@ -243,7 +243,7 @@ IFACEMETHODIMP CGoProCamOutputPin::EnumMediaTypes(IEnumMediaTypes **ppEnum)
 {
     if (!ppEnum) return E_POINTER;
     
-    *ppEnum = new (std::nothrow) CEnumMediaTypes();
+    *ppEnum = new CEnumMediaTypes();
     return *ppEnum ? S_OK : E_OUTOFMEMORY;
 }
 
