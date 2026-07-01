@@ -75,35 +75,41 @@ Most tasks can run on either. The per-task briefs in §5 name a recommended back
 ## 3. Architecture (target — the agents' destination)
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                      GoPro Webcam Studio                        │
-│                                                                 │
-│  ┌─────────────┐  ┌─────────────┐  ┌──────────────────────┐     │
-│  │ GoPro UVC   │  │ Screen cap  │  │ File import (clips)  │     │
-│  │ (USB Hero8) │  │ (getDisplay │  │                      │     │
-│  │             │  │  Media)     │  │                      │     │
-│  └──────┬──────┘  └──────┬──────┘  └──────────┬───────────┘     │
-│         └────────┬───────┴─────────────────────┘                │
-│                  ▼                                              │
-│        ┌────────────────────┐   ┌───────────────────────────┐   │
-│        │  Source Bus +      │──▶│  Compositor (scene graph) │   │
-│        │  Compositor (Rust)│   │                            │   │
-│        └────────┬───────────┘   └─────────┬─────────────────┘   │
-│                 │                         │                    │
-│        ┌────────┴───────────┐             ▼                    │
-│        ▼                    ▼   ┌───────────────────────────┐   │
-│  ┌──────────────┐  ┌──────────────────┐ │ Preview canvas     │   │
-│  │ NLE timeline │  │ Virtual cam out  │ │ (WebView2 + WebGL) │   │
-│  │ (Rust model, │  │ (DirectShow src  │ └───────────────────┘   │
-│  │  web UI)     │  │  filter → pipe)  │                          │
-│  └──────┬───────┘  └────────┬─────────┘                          │
-│         │                     │                                    │
-│         ▼                     ▼                                    │
-│  ┌──────────────┐    ┌──────────────────┐                         │
-│  │ FFmpeg export│    │ Zoom / Teams /   │                         │
-│  │ (H.264 MP4)  │    │ OBS / Meet …     │                         │
-│  └──────────────┘    └──────────────────┘                         │
-└─────────────────────────────────────────────────────────────────┘
++------------------------------------------------------------------+
+|                     GoPro Webcam Studio                          |
+|                                                                  |
+|  +----------+  +----------+  +----------+  +------------------+ |
+|  |GoPro UVC |  |Screen cap|  |GoPro WiFi|  | File import      | |
+|  |(USB)     |  |(display  |  |(RTSP/UDP)|  | (MP4/MOV clips)  | |
+|  |          |  | media)   |  |          |  |                  | |
+|  +----+-----+  +----+-----+  +----+-----+  +--------+---------+ |
+|       |            |            |                 |             |
+|  +----+-----+  +----+-----+  +----+-----+                 |     |
+|  |Bluetooth|  |           |            |                 |     |
+|  |(audio/  |  |           |            |                 |     |
+|  | remote) |  |           |            |                 |     |
+|  +----+-----+  +           +            +                 |     |
+|       +--------+-----------+------------+-----------------+     |
+|                            |                                     |
+|                   +--------v--------+                            |
+|                   |   Source Bus    |                            |
+|                   +--------+--------+                            |
+|                            |                                     |
+|                   +--------v--------+   +---------------------+ |
+|                   |  Compositor     |-->|  Preview canvas    | |
+|                   | (scene graph)   |   |  (WebView2+WebGL)  | |
+|                   +--------+--------+   +---------------------+ |
+|                            |                                     |
+|                   +--------v--------+                            |
+|                   |  Virtual cam    |                            |
+|                   |  (DirectShow)    |                            |
+|                   +--------+--------+                            |
+|                            |                                     |
+|                   +--------v--------+                            |
+|                   |  FFmpeg export   |                            |
+|                   |  (H.264 MP4)     |                            |
+|                   +------------------+                            |
++------------------------------------------------------------------+
 ```
 
 **Contracts the agents write to** (locked first, before any feature code):
@@ -182,7 +188,9 @@ T1 (repo) ──▶ T2 (CI) ──┬─▶ T3 (SourceBus) ──┐
 
 | ID | Title | Backend | Deps | Verifiable acceptance |
 |----|-------|---------|------|-----------------------|
-| **T1** | **Repo + Tauri skeleton + AGENTS.md** — create the repo, Tauri 2.0 workspace with `src-tauri/` (Rust) + `ui/` (React+TS), and an `AGENTS.md` that documents the contract layout for downstream agents. | codex | T0-SYN | `cargo tauri dev` boots a blank window; `cargo test` passes 0 tests; `AGENTS.md` exists. |
+|| **T1** | **Repo + Tauri skeleton + AGENTS.md** — create the repo, Tauri 2.0 workspace with `src-tauri/` (Rust) + `ui/` (React+TS), and an `AGENTS.md` that documents the contract layout for downstream agents. | codex | T0-SYN | `cargo tauri dev` boots a blank window; `cargo test` passes 0 tests; `AGENTS.md` exists. |
+|| **T1-WiFi** | **WiFi streaming support for GoPro (RTSP/UDP)** — Add GoPro WiFi streaming source that connects to GoPro's built-in RTSP server over WiFi. Supports GoPro Hero 8+ WiFi mode. Connection via GoPro's local WiFi AP (192.168.x.x). | cc | T1 | `cargo test wifi_source::tests` connects to a stub RTSP server and receives ≥ 60 frames. |
+|| **T1-BT** | **Bluetooth device support (audio input + remote control)** — Add Bluetooth audio input source and remote control receiver (for GoPro remotes). Uses Windows Bluetooth APIs. | cc | T1 | `cargo test bluetooth::tests` - enumerates paired Bluetooth devices; audio source implements SourceBus. |
 | **T2** | **CI: cargo test + lint + tauri build on Windows** — GitHub Actions (or local `cronjob`) that builds the Rust core + UI on every push. Failing builds block merge. | cc | T1 | A push to `main` triggers the run and exits 0 on a clean tree. |
 | **T3** | **Contract: `SourceBus` trait + frame type + fake source** — define the trait and a `FakeSource` that emits a color-bar pattern at 30 fps. | cc | T1 | `cargo test source_bus::tests` passes; the test asserts 60 frames in ~2s. |
 | **T4** | **`ScreenCaptureSource: SourceBus`** — adapt WebView2 `getDisplayMedia` into the Rust `SourceBus`. Uses Tauri IPC to forward frames from the webview → Rust. | cc | T3, T0-A | `cargo test screen_capture::tests` runs a 5s capture and asserts ≥ 120 frames. |
