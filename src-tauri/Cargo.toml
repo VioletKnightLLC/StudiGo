@@ -33,6 +33,11 @@ nokhwa = { version = "0.10", features = ["input-native", "output-threaded", "dec
 rusb = "0.9"
 tauri-plugin-dialog = "2"
 
+# AI clip-stitching editor (local Ollama vision/reasoning + FFmpeg render)
+reqwest = { version = "0.12", features = ["blocking", "json"] }
+base64 = "0.22"
+tempfile = "3"
+
 [dev-dependencies]
 tokio-test = "0.4"
 mockall = "0.12"

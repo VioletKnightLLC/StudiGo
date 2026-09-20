@@ -128,7 +128,7 @@ impl SourceBus for FakeSource {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::time::{Duration, Instant};
+    use std::time::Instant;
 
     #[test]
     fn test_fake_source_creation() {

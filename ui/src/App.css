@@ -958,3 +958,45 @@ body {
   color: var(--error);
   background: rgba(255, 71, 87, 0.1);
 }
+
+/* AI Stitch */
+.stitch-panel {
+  grid-column: 1 / -1;
+}
+
+.stitch-btn {
+  border-style: solid;
+  margin-top: 12px;
+}
+
+.stitch-btn:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.stitch-result {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(46, 213, 115, 0.08);
+  border: 1px solid var(--success);
+  border-radius: var(--radius-sm);
+}
+
+.stitch-ok {
+  color: var(--success);
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+}
+
+.stitch-path {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  word-break: break-all;
+  font-family: monospace;
+}
+
+.stitch-error {
+  margin-top: 12px;
+  color: var(--error);
+  font-size: 0.8rem;
+}

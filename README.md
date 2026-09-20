@@ -24,6 +24,10 @@ composited output.
 - **Media library** — import local **images and videos** via a native file
   picker, toggle them into the composite, and place them next to your camera
   feed.
+- **AI Stitch & Edit** — select your clips and a built-in AI agent (local Ollama
+  vision + reasoning models) watches each one, chooses the most compelling
+  moments, orders them, and stitches them into a single publish-ready MP4 with
+  crossfade transitions. **Original files are never modified.**
 - **Record the composite** — capture the live preview to a file with a
   3-second countdown, REC indicator, and duration timer.
 - **Screen capture** — use any window or the full desktop as a source.
@@ -51,6 +55,9 @@ composited output.
 - Rust toolchain (stable)
 - Node.js ≥ 20 + npm
 - GoPro Webcam Utility (for GoPro sources)
+- **FFmpeg + ffprobe** on PATH (used by the AI stitcher) — or set `STUDIGO_FFMPEG` to the ffmpeg.exe path/dir
+- **Ollama** running locally with a vision model (e.g. `gemma4-e4b-it-vision`)
+  for the AI Stitch feature's clip analysis
 
 ### Run in development
 
@@ -97,10 +104,13 @@ docs/               Scoping + architecture docs
    - *GoPro* — auto-detects the camera. Hero 9+ uses native USB; Hero 8 falls
      back to recording the GoPro Webcam Utility window.
    - *Generic Camera* — any other USB webcam.
-2. **Import media**: click **Import Media Files**, pick images/videos, and they
+3. **Import media**: click **Import Media Files**, pick images/videos, and they
    appear in the Media Library. Check the box to include each in the composite.
-3. **Choose a layout**: Single, PiP, Side-by-Side, or 2×2 Grid.
-4. **Record**: press **Record** (or `Shift+R`) — a 3-second countdown runs,
+4. **AI Stitch**: import ≥ 2 video clips, click **Stitch Clips with AI**, and the
+   agent produces a polished combined MP4 (saved to `Documents/StudiGo/`).
+   Originals are untouched.
+5. **Choose a layout**: Single, PiP, Side-by-Side, or 2×2 Grid.
+6. **Record**: press **Record** (or `Shift+R`) — a 3-second countdown runs,
    then the composited output is saved as a WebM file. Press Stop (`Shift+R`).
 
 > **Hero 8 note:** the Hero 8 has no native UVC webcam mode. Connect it, enable

@@ -710,7 +710,7 @@ mod tests {
         let iam = filter.iam_video_proc_amp();
 
         // Test get range
-        let (min, max, default, step) = iam.get_range(VideoProcAmpProperty::Brightness).unwrap();
+        let (min, max, default, _step) = iam.get_range(VideoProcAmpProperty::Brightness).unwrap();
         assert_eq!(min, 0);
         assert_eq!(max, 255);
         assert_eq!(default, 128);

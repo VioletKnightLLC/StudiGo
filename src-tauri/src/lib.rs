@@ -1,6 +1,7 @@
 // GoPro Webcam Studio - Tauri application entry point
 
 pub mod compositor;
+pub mod editor;
 pub mod frame;
 pub mod output;
 pub mod scene;
@@ -411,6 +412,14 @@ fn push_virtual_cam_frame(frame_data: Vec<u8>, width: u32, height: u32) -> Resul
     Ok("Frame pushed".to_string())
 }
 
+/// Stitch a set of media files into a single edited, publish-ready video using a
+/// local LLM agent (vision "eyes" + reasoning "director") and FFmpeg to render.
+/// Original files are never modified; a new combined file is produced at `out_path`.
+#[tauri::command]
+fn ai_stitch(files: Vec<String>, out_path: String) -> Result<editor::StitchResult, String> {
+    editor::ai_stitch(&files, &out_path).map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -447,6 +456,8 @@ pub fn run() {
             start_virtual_cam,
             stop_virtual_cam,
             push_virtual_cam_frame,
+            // AI clip-stitching editor
+            ai_stitch,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -12,6 +12,7 @@ interface MediaItem {
   kind: MediaKind;
   enabled: boolean;
   active: boolean;
+  path: string; // original file path (for AI stitching)
 }
  type SceneLayout = "single" | "pip" | "side_by_side" | "grid";
  type TransitionType = "cut" | "fade" | "slide" | "push" | "zoom";
@@ -463,7 +464,7 @@ void status; // Mark as intentionally unused (used via setStatus for debugging)
      const kind: MediaKind = isImage ? "image" : "video";
      // Only accept the platform URL form (browser can't read raw Windows paths).
      const url = pathToUrl(p);
-     const item: MediaItem = { id, name, kind, enabled: true, active: true };
+     const item: MediaItem = { id, name, kind, enabled: true, active: true, path: p };
      newItems.push(item);
      mediaElsRef.current.set(id, loadMediaElement(url, kind));
    }
@@ -519,6 +520,53 @@ void status; // Mark as intentionally unused (used via setStatus for debugging)
  setMediaItems(mediaItemsRef.current);
  const remaining = mediaItemsRef.current.filter((m) => m.enabled).length;
  setIsCapturing(remaining > 0 || enabledSourcesRef.current.size > 0);
+ };
+
+ // AI stitch: send all selected clips to the backend agent to edit + stitch into
+ // one publish-ready video. Originals are preserved on disk.
+ const [stitching, setStitching] = useState(false);
+ const [stitchOutput, setStitchOutput] = useState<string | null>(null);
+ const [stitchError, setStitchError] = useState<string | null>(null);
+
+ const aiStitch = async () => {
+ // Only video clips make sense to stitch (images can't carry a timeline).
+ const clips = mediaItemsRef.current.filter((m) => m.kind === "video" && m.path);
+ if (clips.length < 2) {
+   showToast("Select at least 2 video clips to stitch.", "error");
+   return;
+ }
+ setStitching(true);
+ setStitchOutput(null);
+ setStitchError(null);
+ setStatus("AI agent is analyzing clips and editing...");
+ try {
+   const base = await guardDefaultDir();
+   const outPath = `${base}StudiGo\\ai-stitch-${Date.now()}.mp4`.replace(/\\+/g, "\\");
+   const result = await invoke<any>("ai_stitch", {
+     files: clips.map((c) => c.path),
+     outPath,
+   });
+   setStitchOutput(result.output_path);
+   setStatus("AI stitch complete.");
+   showToast(`AI stitch complete! Output: ${result.output_path}`, "success");
+ } catch (err) {
+   const msg = err instanceof Error ? err.message : String(err);
+   setStitchError(msg);
+   setStatus("AI stitch failed.");
+   showToast(`AI stitch failed: ${msg}`, "error");
+ } finally {
+   setStitching(false);
+ }
+ };
+
+ // Resolve a sensible default output directory (Documents).
+ const guardDefaultDir = async (): Promise<string> => {
+   try {
+     const { documentDir } = await import("@tauri-apps/api/path");
+         return await documentDir();
+   } catch {
+     return "C:";
+   }
  };
 
  // Set position
@@ -800,6 +848,30 @@ void status; // Mark as intentionally unused (used via setStatus for debugging)
  ))}
  </div>
  )}
+ </section>
+
+ {/* AI Stitch */}
+ <section className="panel stitch-panel">
+ <h2>AI Stitch &amp; Edit</h2>
+ <p className="panel-hint">
+   Send your imported video clips to the built-in AI agent — it watches each clip,
+   chooses the most compelling moments and order, and stitches them into one
+   publish-ready MP4. Originals are never modified.
+ </p>
+ <button className="import-btn stitch-btn" onClick={aiStitch} disabled={stitching}>
+   {stitching ? (
+     <span>🎬 Agent editing… (this can take a minute)</span>
+   ) : (
+     <span>✨ Stitch Clips with AI</span>
+   )}
+ </button>
+ {stitchOutput && (
+   <div className="stitch-result">
+     <p className="stitch-ok">✅ Stitched video saved to:</p>
+     <code className="stitch-path">{stitchOutput}</code>
+   </div>
+ )}
+ {stitchError && <p className="stitch-error">⚠️ {stitchError}</p>}
  </section>
 
  {/* Recording controls */}
