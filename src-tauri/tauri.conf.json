@@ -1,18 +1,26 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "GoPro Webcam Studio",
+  "productName": "StudiGo",
   "version": "0.1.0",
-  "identifier": "com.gopro.webcam-studio",
+  "identifier": "com.violetknight.studigo",
   "build": {
-    "beforeDevCommand": "npm run dev -- --port 5173",
+    "beforeDevCommand": {
+      "script": "npm run dev -- --port 5173",
+      "cwd": "../ui",
+      "wait": false
+    },
     "devUrl": "http://localhost:5173",
-    "beforeBuildCommand": "npm run build",
+    "beforeBuildCommand": {
+      "script": "npm run build",
+      "cwd": "../ui",
+      "wait": true
+    },
     "frontendDist": "../ui/dist"
   },
   "app": {
     "windows": [
       {
-        "title": "GoPro Webcam Studio",
+        "title": "StudiGo",
         "width": 1280,
         "height": 720,
         "resizable": true,
@@ -24,6 +32,20 @@
     }
   },
   "bundle": {
-    "active": false
+    "active": true,
+    "targets": ["nsis"],
+    "category": "Video",
+    "shortDescription": "Creator-grade GoPro webcam studio",
+    "longDescription": "Turn a GoPro into a webcam, composite it with your screen and media, and record — all in one app.",
+    "icon": [
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "nsis": {
+        "languages": ["English"],
+        "displayLanguageSelector": false,
+        "installMode": "currentUser"
+      }
+    }
   }
 }

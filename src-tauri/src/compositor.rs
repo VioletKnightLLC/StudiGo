@@ -7,8 +7,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
 use crate::frame::Frame;
-use crate::scene::{Layer, Scene, Transition, TransitionType};
-use crate::source_bus::SourceBus;
+use crate::scene::{Layer, Scene, TransitionType};
 
 /// Compositor error types
 #[derive(Debug, thiserror::Error)]
@@ -102,9 +101,9 @@ impl Compositor {
 
     /// Get latest frame from a source
     pub fn get_frame(&self, source_id: &str) -> Option<Frame> {
-        self.source_buffers.get(source_id).and_then(|buffer| {
-            buffer.read().ok().and_then(|guard| guard.clone())
-        })
+        self.source_buffers
+            .get(source_id)
+            .and_then(|buffer| buffer.read().ok().and_then(|guard| guard.clone()))
     }
 
     /// Composite all source frames into a single output frame
@@ -187,10 +186,10 @@ impl Compositor {
 
                 // Source and destination pixel indices
                 let src_idx = ((src_y * src_width + src_x) * 3) as usize;
-                let dst_idx = (((y_offset + dy) * self.output_width + (x_offset + dx)) * 3) as usize;
+                let dst_idx =
+                    (((y_offset + dy) * self.output_width + (x_offset + dx)) * 3) as usize;
 
-                if src_idx + 2 < source_frame.data.len() && dst_idx + 2 < self.output_buffer.len()
-                {
+                if src_idx + 2 < source_frame.data.len() && dst_idx + 2 < self.output_buffer.len() {
                     // Apply opacity
                     let opacity = layer.opacity;
                     for c in 0..3 {
@@ -227,7 +226,7 @@ impl Compositor {
                 // For fade, we render both scenes and blend
                 let from_compositor = &mut Compositor::with_scene(from_scene.clone());
                 // Copy buffers
-                for (id, buffer) in &self.source_buffers {
+                for id in self.source_buffers.keys() {
                     if let Some(frame) = self.get_frame(id) {
                         from_compositor.push_frame(id, frame).ok();
                     }
@@ -243,10 +242,10 @@ impl Compositor {
                         let to_val = to_frame.data[i] as f32;
                         self.output_buffer[i] = (from_val * (1.0 - alpha) + to_val * alpha) as u8;
                     }
-                    return self.composite();
+                    self.composite()
                 } else {
                     self.set_scene(to_scene.clone());
-                    return self.composite();
+                    self.composite()
                 }
             }
             _ => {

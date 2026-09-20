@@ -3,8 +3,8 @@
 //! This module provides a ScreenCaptureSource that receives screen capture frames
 //! from the frontend via Tauri commands and exposes them through the SourceBus trait.
 
-use std::sync::{Arc, Mutex};
 use crate::source_bus::{FrameMetadata, SourceBus};
+use std::sync::{Arc, Mutex};
 
 /// Screen capture source configuration
 #[derive(Debug, Clone)]
@@ -68,14 +68,6 @@ impl ScreenCaptureSource {
     /// Get the frame buffer for passing to Tauri commands
     pub fn frame_buffer(&self) -> Arc<Mutex<FrameBuffer>> {
         Arc::clone(&self.frame_buffer)
-    }
-
-    /// Check if there's a new frame available
-    fn has_new_frame(&self) -> bool {
-        self.frame_buffer
-            .lock()
-            .map(|buf| buf.data.is_some())
-            .unwrap_or(false)
     }
 
     /// Pop the current frame and clear the buffer
@@ -183,7 +175,7 @@ mod tests {
     fn test_screen_source_next_frame_connected() {
         let mut source = ScreenCaptureSource::new();
         source.connect().unwrap();
-        
+
         let frame = source.next_frame().unwrap();
         // Should return empty/zero frame when no data from frontend
         assert!(!frame.is_empty());
@@ -198,7 +190,7 @@ mod tests {
             fps: 60.0,
         };
         let source = ScreenCaptureSource::with_config(config);
-        
+
         let meta = source.frame_metadata().unwrap();
         assert_eq!(meta.width, 1280);
         assert_eq!(meta.height, 720);

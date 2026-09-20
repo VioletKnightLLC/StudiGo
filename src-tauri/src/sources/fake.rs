@@ -55,9 +55,9 @@ impl FakeSource {
         let width = self.config.width;
         let height = self.config.height;
         let bar_width = width / 8;
-        
+
         let mut data = vec![0u8; (width * height * 3) as usize];
-        
+
         // Standard SMPTE color bars
         let colors: [[u8; 3]; 8] = [
             [255, 255, 255], // White
@@ -69,18 +69,18 @@ impl FakeSource {
             [0, 0, 255],     // Blue
             [0, 0, 0],       // Black
         ];
-        
+
         for y in 0..height {
             for x in 0..width {
                 let bar_idx = (x / bar_width) as usize % 8;
                 let color = colors[bar_idx];
                 let offset = ((y * width + x) * 3) as usize;
-                data[offset] = color[0];     // R
+                data[offset] = color[0]; // R
                 data[offset + 1] = color[1]; // G
                 data[offset + 2] = color[2]; // B
             }
         }
-        
+
         data
     }
 }
@@ -155,7 +155,7 @@ mod tests {
     fn test_fake_source_next_frame() {
         let mut source = FakeSource::new();
         source.connect().unwrap();
-        
+
         let frame = source.next_frame().unwrap();
         let expected_size = DEFAULT_WIDTH * DEFAULT_HEIGHT * 3;
         assert_eq!(frame.len() as u32, expected_size);
@@ -170,19 +170,19 @@ mod tests {
             source_id: "test".to_string(),
         });
         source.connect().unwrap();
-        
+
         let start = Instant::now();
         let mut frames = 0;
-        
+
         // Generate 60 frames and measure time
         while frames < 60 {
             source.next_frame().unwrap();
             frames += 1;
         }
-        
+
         let elapsed = start.elapsed();
         let fps = frames as f32 / elapsed.as_secs_f32();
-        
+
         // Should be close to 30 fps (allow wide tolerance for fast machines)
         assert!(
             fps > 10.0 && fps < 1500.0,
@@ -195,7 +195,7 @@ mod tests {
     fn test_fake_source_frame_metadata() {
         let mut source = FakeSource::new();
         source.connect().unwrap();
-        
+
         let meta = source.frame_metadata().unwrap();
         assert_eq!(meta.width, DEFAULT_WIDTH);
         assert_eq!(meta.height, DEFAULT_HEIGHT);

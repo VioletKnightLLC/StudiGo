@@ -8,7 +8,7 @@
 //! camera device to the system.
 
 use anyhow::{Context, Result};
-use log::{info, warn};
+use log::info;
 use nokhwa::pixel_format::RgbFormat;
 use nokhwa::utils::{ApiBackend, CameraIndex, RequestedFormat, RequestedFormatType};
 use rusb::UsbContext;
@@ -17,8 +17,32 @@ use std::sync::Arc;
 
 use crate::source_bus::{FrameMetadata, SourceBus};
 
-/// GoPro USB Vendor ID
-const GOPRO_VID: u16 = 0x0ae4;
+/// GoPro USB Vendor ID (confirmed via usb.ids / DeviceHunt: vendor 0x2672 = GoPro, Inc.)
+/// NOTE: when a GoPro is in UVC/webcam mode it often presents as a *generic* UVC device
+/// whose enumerated VID is the webcam-class driver's, not GoPro's. So USB-VID matching
+/// is a secondary "physically plugged in" signal, not a primary detector. The primary
+/// detector is name-based via find_gopro_camera() (MSMF camera list).
+const GOPRO_VID: u16 = 0x2672;
+
+/// Result of a GoPro detection probe, returned to the frontend so it can explain
+/// *why* a GoPro was or wasn't found.
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct GoProDetection {
+    /// True if any signal indicated a GoPro is present.
+    pub detected: bool,
+    /// True if the MSMF camera list contains a GoPro-named device (primary signal).
+    pub camera_named: bool,
+    /// True if a USB device with GoPro's VID 0x2672 was seen (secondary signal).
+    pub usb_vid_match: bool,
+    /// Index of the GoPro camera in the MSMF list, if found by name.
+    pub camera_index: Option<u32>,
+    /// Human-readable name of the matched camera, if any.
+    pub camera_name: Option<String>,
+    /// All cameras seen by MSMF (for the frontend's device picker).
+    pub all_cameras: Vec<String>,
+    /// Diagnostic message for the UI.
+    pub message: String,
+}
 
 /// UVC Source configuration
 #[derive(Debug, Clone)]
@@ -109,24 +133,73 @@ impl UvcSource {
         Ok(names)
     }
 
-    /// Find GoPro camera by searching for known patterns in camera names
-    pub fn find_gopro_camera() -> Result<Option<u32>> {
+    /// Find GoPro camera by searching for known patterns in camera names.
+    /// This is the PRIMARY detector — works when the GoPro is in UVC/webcam mode
+    /// and shows up in the MSMF camera list with a GoPro/Hero-like name.
+    pub fn find_gopro_camera() -> Result<Option<(u32, String)>> {
         let cameras = nokhwa::query(ApiBackend::Auto).context("Failed to query cameras")?;
 
         for cam in &cameras {
-            let name = cam.human_name().to_lowercase();
-            // Match common GoPro name patterns
-            if name.contains("gopro") || name.contains("hero") {
+            let name = cam.human_name().to_string();
+            let name_lower = name.to_lowercase();
+            // Match common GoPro name patterns. In webcam mode the device may appear as
+            if name_lower.contains("gopro")
+                || name_lower.contains("hero")
+                || (name_lower.contains("GP") && name_lower.len() <= 6)
+            {
                 let index: u32 = match cam.index() {
                     CameraIndex::Index(i) => *i,
                     CameraIndex::String(_) => continue,
                 };
-                info!("Found GoPro camera at index {}", index);
-                return Ok(Some(index));
+                info!("Found GoPro camera at index {} ({})", index, name);
+                return Ok(Some((index, name)));
             }
         }
 
         Ok(None)
+    }
+
+    /// Combined GoPro detection probe (PRIMARY: MSMF name match, SECONDARY: USB VID match).
+    /// Returns a structured GoProDetection for the frontend, including all visible
+    /// cameras so the UI can offer a manual device picker if auto-detection misses.
+    pub fn detect_gopro() -> GoProDetection {
+        // Primary: MSMF camera list name match.
+        let all_cameras = Self::list_cameras().unwrap_or_default();
+        let named_match = Self::find_gopro_camera().ok().flatten();
+
+        let (camera_index, camera_name) = match &named_match {
+            Some((idx, name)) => (Some(*idx), Some(name.clone())),
+            None => (None, None),
+        };
+
+        // Secondary: USB VID 0x2672 enumeration.
+        let usb_vid_match = detect_gopro_usb();
+
+        let detected = named_match.is_some() || usb_vid_match;
+
+        let message = if named_match.is_some() {
+            format!(
+                "GoPro detected as camera: {} (index {})",
+                camera_name.as_deref().unwrap_or("unknown"),
+                camera_index.unwrap_or(0)
+            )
+        } else if usb_vid_match {
+            "GoPro USB device (VID 0x2672) present but not in camera list — put camera in Webcam mode".to_string()
+        } else if all_cameras.is_empty() {
+            "No cameras found. Plug in the GoPro via USB-C and set it to Webcam mode".to_string()
+        } else {
+            "No GoPro-named camera found. Verify the camera is in Webcam mode, or pick a device manually".to_string()
+        };
+
+        GoProDetection {
+            detected,
+            camera_named: named_match.is_some(),
+            usb_vid_match,
+            camera_index,
+            camera_name,
+            all_cameras,
+            message,
+        }
     }
 
     /// Initialize the camera on Windows/MSMF

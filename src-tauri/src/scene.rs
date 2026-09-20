@@ -114,9 +114,10 @@ impl Size {
 }
 
 /// Transition types for scene changes
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub enum TransitionType {
     /// Instant cut (no transition)
+    #[default]
     Cut,
     /// Cross-fade between scenes
     Fade,
@@ -126,12 +127,6 @@ pub enum TransitionType {
     Push(PushDirection),
     /// Zoom transition
     Zoom,
-}
-
-impl Default for TransitionType {
-    fn default() -> Self {
-        TransitionType::Cut
-    }
 }
 
 /// Slide direction for slide transitions
@@ -209,10 +204,10 @@ pub mod layouts {
         pip_position: Position,
     ) -> Scene {
         let mut scene = Scene::new("pip", "Picture in Picture", output_width, output_height);
-        
+
         // Main source (full screen)
         scene.add_layer(Layer::new(main_source, 0, 0, output_width, output_height));
-        
+
         // PiP source (inset)
         let mut pip_layer = Layer::new(
             pip_source,
@@ -223,7 +218,7 @@ pub mod layouts {
         );
         pip_layer.opacity = 1.0;
         scene.add_layer(pip_layer);
-        
+
         scene
     }
 
@@ -236,32 +231,52 @@ pub mod layouts {
     ) -> Scene {
         let mut scene = Scene::new("side_by_side", "Side by Side", output_width, output_height);
         let half_width = output_width / 2;
-        
+
         scene.add_layer(Layer::new(left_source, 0, 0, half_width, output_height));
-        scene.add_layer(Layer::new(right_source, half_width as i32, 0, half_width, output_height));
-        
+        scene.add_layer(Layer::new(
+            right_source,
+            half_width as i32,
+            0,
+            half_width,
+            output_height,
+        ));
+
         scene
     }
 
     /// Grid layout (2x2)
-    pub fn grid_2x2(
-        sources: &[&str; 4],
-        output_width: u32,
-        output_height: u32,
-    ) -> Scene {
+    pub fn grid_2x2(sources: &[&str; 4], output_width: u32, output_height: u32) -> Scene {
         let mut scene = Scene::new("grid_2x2", "2x2 Grid", output_width, output_height);
         let half_width = output_width / 2;
         let half_height = output_height / 2;
-        
+
         // Top-left
         scene.add_layer(Layer::new(sources[0], 0, 0, half_width, half_height));
         // Top-right
-        scene.add_layer(Layer::new(sources[1], half_width as i32, 0, half_width, half_height));
+        scene.add_layer(Layer::new(
+            sources[1],
+            half_width as i32,
+            0,
+            half_width,
+            half_height,
+        ));
         // Bottom-left
-        scene.add_layer(Layer::new(sources[2], 0, half_height as i32, half_width, half_height));
+        scene.add_layer(Layer::new(
+            sources[2],
+            0,
+            half_height as i32,
+            half_width,
+            half_height,
+        ));
         // Bottom-right
-        scene.add_layer(Layer::new(sources[3], half_width as i32, half_height as i32, half_width, half_height));
-        
+        scene.add_layer(Layer::new(
+            sources[3],
+            half_width as i32,
+            half_height as i32,
+            half_width,
+            half_height,
+        ));
+
         scene
     }
 }

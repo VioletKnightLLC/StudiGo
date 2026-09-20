@@ -59,7 +59,9 @@ impl WifiSource {
         let addr = format!("{}:{}", self.config.camera_ip, self.config.rtsp_port);
 
         match TcpStream::connect_timeout(
-            &addr.parse().unwrap_or_else(|_| panic!("Invalid address: {}", addr)),
+            &addr
+                .parse()
+                .unwrap_or_else(|_| panic!("Invalid address: {}", addr)),
             Duration::from_secs(5),
         ) {
             Ok(_stream) => {

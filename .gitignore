@@ -1,5 +1,24 @@
+# Dependencies
 node_modules/
-target/
+src-tauri/target/
+
+# Build output
 dist/
+release/
 *.log
+
+# Tauri generated schemas (auto-generated at build time)
+src-tauri/gen/schemas/
+
+# OS cruft
 .DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Local scratch / dev-only (not for distribution)
+src-tauri/webcamtest.rs

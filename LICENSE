@@ -1,0 +1,50 @@
+# StudiGo — Proprietary Source License
+
+Copyright © 2026 Violet Knight LLC. All rights reserved.
+
+## License Grant
+
+Permission to use, copy, modify, and distribute this software and its
+documentation (the "Software") is **not granted** under this license.
+
+The Software is provided for **private, non-commercial, personal use only**.
+Licensed use is limited to:
+
+- You may run the Software for your own personal, non-commercial purposes.
+- You may view the source code to understand how the Software works.
+
+## Restrictions
+
+You may **not**, without prior written permission from Violet Knight LLC:
+
+1. **Distribute** or sublicense the Software, in whole or in part, to any third party.
+2. **Reproduce** or publish the source code or any derivative thereof.
+3. **Use the Software for commercial purposes** or in connection with any
+   commercial activity, product, or service.
+4. **Modify, adapt, translate, reverse-engineer, decompile, or disassemble**
+   the Software in any way that would enable redistribution of modifications.
+5. Remove or alter any proprietary notices, copyright notices, or watermarks
+   contained in the Software.
+
+## Commercial Licensing
+
+A separate commercial license is required for any use other than private,
+non-commercial, personal use. For a commercial license, contact:
+
+**Violet Knight LLC**
+
+## Disclaimer
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+*The maintainers may, at their sole discretion, re-license this project under
+the MIT or Apache-2.0 License in the future. This file will be updated if and
+when that occurs.*

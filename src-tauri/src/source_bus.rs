@@ -56,20 +56,20 @@ pub trait SourceBus {
 pub enum SourceError {
     #[error("Source not connected")]
     NotConnected,
-    
+
     #[error("Connection failed: {0}")]
     ConnectionFailed(String),
-    
+
     #[error("Frame capture failed: {0}")]
     CaptureFailed(String),
-    
+
     #[error("Source disconnected unexpectedly")]
     Disconnected,
 }
 
 pub mod sealed {
     use super::SourceBus;
-    
+
     /// Helper to allow dynamic dispatch on source implementations
     pub trait SourceBusDyn: SourceBus {}
     impl<T: SourceBus> SourceBusDyn for T {}

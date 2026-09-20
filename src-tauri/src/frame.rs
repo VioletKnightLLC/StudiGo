@@ -28,7 +28,7 @@ impl Frame {
             .duration_since(std::time::UNIX_EPOCH)
             .map(|d| d.as_micros() as u64)
             .unwrap_or(0);
-        
+
         Frame {
             data,
             width,
@@ -44,13 +44,13 @@ impl Frame {
             .duration_since(std::time::UNIX_EPOCH)
             .map(|d| d.as_micros() as u64)
             .unwrap_or(0);
-        
+
         assert_eq!(
             data.len() as u32,
             width * height * 3,
             "Frame data size must match dimensions"
         );
-        
+
         Frame {
             data,
             width,
