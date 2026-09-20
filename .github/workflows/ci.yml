@@ -13,6 +13,9 @@ jobs:
   test:
     name: Test (Rust)
     runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: src-tauri
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -22,6 +25,8 @@ jobs:
 
       - name: Cache cargo registry
         uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
 
       - name: Check formatting
         run: cargo fmt --all -- --check
@@ -67,6 +72,8 @@ jobs:
 
       - name: Cache cargo registry
         uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
